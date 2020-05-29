@@ -1,0 +1,32 @@
+﻿
+@using WebApplication1.Models
+@model Task
+<div class="card-header">
+    Записать задачу:
+</div>
+<div class="card-body">
+    @using (Html.BeginForm("Add", "Home"))
+    {
+        <div class="form-group">
+            <label>Описание задачи:</label>
+            @Html.TextBoxFor(model => model.Description, new { @class = "form-control" })
+        </div>
+        <div class="form-group">
+            <label>Приоритет:</label>
+            @Html.TextBoxFor(model => model.Priority, new { @class = "form-control" })
+        </div>
+        <div class="form-group">
+            <label>Срок выполнения:</label>
+            @Html.TextBoxFor(model => model.Deadline, new { @class = "form - control" })
+        </div>
+        <div class="form-group">
+            <label>Выполнено:</label>
+            @Html.EditorFor(model => model.State, new { @class = "form-check-input" })
+        </div>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    }
+</div>
+Соз
+
+
+

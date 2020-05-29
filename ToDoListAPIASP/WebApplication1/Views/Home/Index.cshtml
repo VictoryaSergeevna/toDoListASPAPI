@@ -1,0 +1,155 @@
+﻿@{
+    ViewBag.Title = "Index";
+}
+
+@section scripts{
+    <script type="text/javascript">
+        var model = {
+            tasks: ko.observableArray(),
+            editor: {
+                description: ko.observable(""),
+                priority: ko.observable(""),
+                deadline: ko.observable(""),
+                state: ko.observable(false),
+                id: ko.observable()
+            },
+            displaySummary: ko.observable(true),
+            createAction: ko.observable()
+        }
+
+        function sendAjaxRequest(httpMethod, callback, url, reqData) {
+            $.ajax({
+                url: '/api/todolist' + (url ? '/' + url : ''),
+                method: httpMethod,
+                success: callback,
+                data: reqData
+            })
+        }
+
+        function getAllData() {
+            sendAjaxRequest('GET', function (data) {
+                model.tasks.removeAll();
+                for (var i = 0; i < data.length; i++) {
+                    model.tasks.push(data[i]);
+                }
+
+            })
+        }
+
+        function removeItem(item) {
+            sendAjaxRequest('DELETE', function () {
+                getAllData();
+            }, item.Id)
+
+        }
+
+        function handleCreateClick() {
+            model.displaySummary(false);
+            model.createAction(true);
+        }
+        function handleSaveClick() {
+            if (model.createAction() == true) {
+                sendAjaxRequest('POST', function (item) {
+                    model.tasks.push(item);
+                    model.displaySummary(true);
+
+                }, null, {
+                        Description: model.editor.description,
+                        Priority: model.editor.priority,
+                        Deadline: model.editor.deadline,
+                        State: model.editor.state
+                    });
+            }
+            else {
+                sendAjaxRequest('PUT', function () {
+                    getAllData();
+                    model.displaySummary(true);
+                }, null, {
+                        Id: model.editor.id,
+                        Description: model.editor.description,
+                        Priority: model.editor.priority,
+                        Deadline: model.editor.deadline,
+                        State: model.editor.state
+                    })
+            }
+        }
+
+        function editItem(item) {
+            alert(item.Id);
+            model.createAction(false);
+            model.editor.description = item.Description;
+            model.editor.priority = item.Priority;
+            model.editor.deadline = item.Deadline;
+            model.editor.state = item.State;
+            model.editor.id = item.Id;
+            model.displaySummary(false);
+        }
+
+        $(document).ready(
+            function () {
+                getAllData();
+                ko.applyBindings(model);
+            }
+        )
+    </script>
+}
+<div class="card" data-bind="if: model.displaySummary">
+    <div class="card-header">
+        Список задач
+    </div>
+    <div class="card-body">
+        <table class="table table-striped table-sm">
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Описание</th>
+                    <th>Приоритет</th>
+                    <th>Срок</th>
+                    <th>Состояние</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody data-bind="foreach: model.tasks">
+                <tr>
+                    <td data-bind="text: Id"></td>
+                    <td data-bind="text: Description"></td>
+                    <td data-bind="text: Priority"></td>
+                    <td data-bind="text: Deadline"></td>
+                    <td><input type="checkbox" data-bind="checked: State" disabled /></td>
+                    <td><a class="btn btn-primary btn-sm" data-bind="click: removeItem">Удалить</a></td>
+                    <td><a class="btn btn-primary btn-sm" data-bind="click: editItem">Редактировать</a></td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="btn btn-primary btn-sm" data-bind="click: handleCreateClick">Создать</button>
+    </div>
+</div>
+<div class="card" data-bind="ifnot: model.displaySummary">
+    <div class="card-header">
+        Редактирование
+    </div>
+    <div class="card-body">
+        <input type="hidden" data-bind="value: model.editor.description" />
+        <div class="form-group">
+            <label>Описание:</label>
+            <input type="text" data-bind="value: model.editor.description" class="form-control" id="descriptionEditor" />
+        </div>
+        <div class="form-group">
+            <label>Приоритет:</label>
+            <input type="number" data-bind="value: model.editor.priority" class="form-control" id="priorityEditor" />
+        </div>
+        <div class="form-group">
+            <label>Срок:</label>
+            <input type="text" data-bind="value: model.editor.deadline" class="form-control" id="deadlineEditor" />
+        </div>
+        <div class="form-group">
+            <label>Состояние:</label>
+            <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" id="stateEditor" data-bind="checked: model.editor.state">
+                <label class="custom-control-label" for="stateEditor">Выполнено/Невыполнено</label>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary" data-bind="click: handleSaveClick">Сохранить</button>
+    </div>
+</div>
+
